@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Violet Bags | Tienda de Bolsas</title>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial, sans-serif; color: #333; background: #fff; }
+header { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:20px 6%; border-bottom:1px solid #eee; }
+.logo { font-size:25px; font-weight:bold; color:#bd789b; letter-spacing:2px; }
+.search { width:35%; padding:12px; border:none; border-bottom:1px solid #ccc; outline:none; }
+.header-icons { display:flex; gap:18px; font-size:14px; }
+.container { display:grid; grid-template-columns:155px 1fr 110px; gap:25px; max-width:1250px; margin:30px auto; padding:0 20px; }
+.sidebar a { display:block; margin:18px 0; color:#bd789b; font-size:13px; text-decoration:none; cursor:pointer; }
+.catalog-header { display:flex; justify-content:space-between; margin-bottom:25px; }
+.catalog-header h2 { font-size:22px; font-weight:normal; }
+select { padding:8px; border:1px solid #eee; background:white; }
+.products { display:grid; grid-template-columns:repeat(3,1fr); gap:28px 15px; }
+.product { text-align:center; min-width:0; }
+.carousel { position:relative; overflow:hidden; background:#f5f1ef; }
+.carousel-track { display:flex; transition:transform .35s ease; }
+.carousel-track img { width:100%; height:230px; flex:0 0 100%; object-fit:contain; cursor:pointer; }
+.arrow { position:absolute; top:45%; transform:translateY(-50%); border:none; border-radius:50%; width:32px; height:32px; background:white; cursor:pointer; font-size:20px; }
+.prev { left:8px; } .next { right:8px; }
+.dots { position:absolute; bottom:10px; left:0; right:0; display:flex; justify-content:center; gap:6px; }
+.dot { width:7px; height:7px; border:none; border-radius:10px; background:#aaa; cursor:pointer; }
+.dot.active { width:18px; background:#bd789b; }
+.favorite { position:absolute; right:10px; top:10px; background:white; border:none; border-radius:50%; width:34px; height:34px; font-size:20px; cursor:pointer; }
+.favorite.active { color:#d52c4c; }
+.product h3 { font-size:13px; font-weight:normal; margin-top:12px; cursor:pointer; }
+.price { margin-top:7px; font-weight:bold; font-size:14px; }
+.old-price { text-decoration:line-through; color:#999; }
+.offer { color:#d52c4c; font-size:12px; margin-top:7px; }
+.product button.add-cart { margin-top:10px; padding:10px; width:100%; background:#bd789b; border:none; color:white; cursor:pointer; }
+.right-menu { text-align:center; }
+.right-menu div { margin-bottom:30px; }
+
+/* Ventana de detalle */
+.modal { display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.65); padding:20px; overflow-y:auto; }
+.modal.show { display:flex; justify-content:center; align-items:center; }
+.modal-content { position:relative; background:white; width:900px; max-width:100%; padding:30px; border-radius:8px; display:grid; grid-template-columns:1fr 1fr; gap:35px; margin:auto; }
+.close { position:absolute; top:12px; right:18px; font-size:30px; background:none; border:none; cursor:pointer; z-index:5; }
+.gallery-main { position:relative; background:#f5f1ef; }
+.gallery-main img { width:100%; height:390px; object-fit:contain; }
+.gallery-thumbs { display:flex; gap:10px; margin-top:12px; overflow-x:auto; }
+.gallery-thumbs img { width:75px; height:80px; object-fit:contain; background:#f5f1ef; cursor:pointer; border:2px solid transparent; }
+.gallery-thumbs img.selected { border-color:#bd789b; }
+.detail-info { padding:20px 5px; }
+.detail-info h2 { font-size:25px; font-weight:normal; margin-bottom:15px; }
+.detail-price { font-size:23px; font-weight:bold; color:#bd789b; margin:18px 0; }
+.description { line-height:1.6; font-size:14px; color:#666; margin-bottom:20px; }
+.color-options { display:flex; gap:12px; margin:15px 0 25px; }
+.color-option { border:2px solid #ddd; border-radius:50%; width:35px; height:35px; cursor:pointer; }
+.color-option.selected { outline:2px solid #bd789b; outline-offset:3px; }
+.color-label { font-size:14px; margin-top:8px; }
+.buy-button, .whatsapp-button { display:block; width:100%; padding:14px; margin-top:12px; border:none; cursor:pointer; font-weight:bold; text-align:center; }
+.buy-button { background:#bd789b; color:white; }
+.whatsapp-button { background:#25D366; color:white; }
+.cart-message { margin-top:12px; color:#38834d; font-size:13px; }
+
+@media(max-width:800px) {
+ header { flex-wrap:wrap; padding:15px; }
+ .search { width:100%; order:3; }
+ .container { grid-template-columns:1fr; padding:0 12px; }
+ .sidebar { display:flex; flex-wrap:wrap; gap:15px; }
+ .sidebar h3 { width:100%; }
+ .sidebar a { margin:0; }
+ .right-menu { display:none; }
+ .products { grid-template-columns:repeat(2,1fr); gap:22px 12px; }
+ .carousel-track img { height:190px; }
+ .modal-content { grid-template-columns:1fr; padding:20px; gap:10px; margin:15px auto; }
+ .gallery-main img { height:280px; }
+ .detail-info { padding:10px 0; }
+}
+</style>
+</head>
+<body>
+
+<header>
+ <div class="logo">Nubia Boutique</div>
+ <input class="search" id="search" placeholder="Buscar una bolsa...">
+ <!--<div class="header-icons">
+  <span>♡ Favoritos</span>
+  <span>🛍️ Carrito (<b id="cart">0</b>)</span>
+ </div> -->
+</header>
+
+<div class="container">
+ <aside class="sidebar">
+  <h3>Categorías</h3>
+  <a onclick="filterProducts('Todas')">Todas</a>
+  <a onclick="filterProducts('Mano')">Bolsas de mano</a>
+  <a onclick="filterProducts('Hombro')">Bolsas de hombro</a>
+  <a onclick="filterProducts('Mochila')">Mochilas</a>
+  <a onclick="filterProducts('Cartera')">Carteras</a>
+  <a onclick="filterProducts('Elegante')">Elegantes</a>
+  <a onclick="filterProducts('Casual')">Casuales</a>
+ </aside>
+ <main>
+  <div class="catalog-header">
+   <h2>Bolsas para mujer</h2>
+   <select id="sort" onchange="sortProducts()">
+    <option value="default">Ordenar por</option>
+    <option value="low">Precio más bajo</option>
+    <option value="high">Precio más alto</option>
+   </select>
+  </div>
+  <section class="products" id="products"></section>
+ </main>
+ <!---<aside class="right-menu">
+  <div>🛍️<p>Artículos en la cesta</p></div>
+  <div>♙<p>Mi cuenta</p></div>
+  <div>♡<p>Favoritos</p></div>
+ </aside>--->
+</div>
+
+<div class="modal" id="productModal">
+ <div class="modal-content">
+  <button class="close" onclick="closeModal()" aria-label="Cerrar">×</button>
+  <div class="gallery">
+   <div class="gallery-main">
+    <img id="detailImage" src="" alt="Fotografía del producto">
+    <button class="arrow prev" onclick="changeDetailImage(-1)" aria-label="Foto anterior">‹</button>
+    <button class="arrow next" onclick="changeDetailImage(1)" aria-label="Foto siguiente">›</button>
+   </div>
+   <div class="gallery-thumbs" id="thumbnails"></div>
+  </div>
+  <div class="detail-info">
+   <h2 id="detailName"></h2>
+   <p id="detailDescription" class="description"></p>
+   <p id="detailPrice" class="detail-price"></p>
+   <h4>Selecciona tu color:</h4>
+   <div class="color-options" id="colorOptions"></div>
+   <p class="color-label">Color seleccionado: <b id="selectedColor"></b></p>
+   <button class="buy-button" onclick="addCart()">AGREGAR AL CARRITO</button>
+   <button class="whatsapp-button" onclick="buyWhatsApp()">COMPRAR POR WHATSAPP</button>
+   <p id="cartMessage" class="cart-message"></p>
+  </div>
+ </div>
+</div>
+
+<script>
+// CONFIGURACIÓN: reemplaza el número de ejemplo por el WhatsApp de tu negocio.
+// Formato: 52 + 10 dígitos, sin espacios ni signos.
+const WHATSAPP_NUMBER = "527221872682";
+
+const catalog = [
+ {
+  id:1, name:"Bolsa elegante de mano", category:"Mano",
+  price:1400, oldPrice:0,
+  description:"Bolsa elegante para mujer. Ideal para eventos y uso diario. Diseño moderno con amplio espacio interior.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Beige",hex:"#d7c2a5"},{name:"Rosa",hex:"#dca5b8"}],
+  images:[
+    "./Img/1/1.jpeg",
+    "./Img/1/2.jpeg",
+    "./Img/1/3.jpeg",
+    "./Img/1/4.jpeg",
+    "./Img/1/5.jpeg"
+  ]
+ },
+ {
+  id:2, name:"Bolsa moderna de hombro", category:"Hombro",
+  price:1350, oldPrice:0,
+  description:"Bolsa de hombro con diseño moderno. Perfecta para complementar cualquier outfit.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+    "./Img/2/1.jpeg",
+    "./Img/2/2.jpeg",
+    "./Img/2/3.jpeg",
+    "./Img/2/4.jpeg",
+    "./Img/2/5.jpeg"
+  ]
+ },
+ {
+  id:3, name:"Bolsa casual para dama", category:"Casual",
+  price:1050, oldPrice:0,
+  description:"Bolsa casual, práctica y cómoda. Excelente opción para actividades cotidianas.",
+  colors:[{name:"Blanco",hex:"#eeeeee"},{name:"Negro",hex:"#222222"},{name:"Rosa",hex:"#dca5b8"}],
+  images:[
+    "./Img/3/1.jpeg",
+    "./Img/3/2.jpeg",
+    "./Img/3/3.jpeg",
+    "./Img/3/4.jpeg",
+    "./Img/3/5.jpeg"
+  ]
+ },
+ {
+  id:4, name:"Bolsa rosa de mano", category:"Mano",
+  price:1100, oldPrice:0,
+  description:"Bolsa de diseño femenino y elegante, ideal para ocasiones especiales.",
+  colors:[{name:"Rosa",hex:"#dca5b8"},{name:"Negro",hex:"#222222"}],
+  images:[
+    "./Img/4/1.jpeg",
+    "./Img/4/2.jpeg",
+    "./Img/4/3.jpeg",
+    "./Img/4/4.jpeg",
+	"./Img/4/5.jpeg",
+    "./Img/4/6.jpeg"
+  ]
+ },
+ {
+  id:5, name:"Mochila moderna para mujer", category:"Mochila",
+  price:1350, oldPrice:0,
+  description:"Mochila moderna, cómoda y funcional. Cuenta con espacio para guardar tus artículos personales.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+    "./Img/5/1.jpeg",
+    "./Img/5/2.jpeg",
+	"./Img/5/3.jpeg",
+	"./Img/5/4.jpeg",
+    "./Img/5/5.jpeg",
+	"./Img/5/6.jpeg"
+  ]
+ },
+ {
+  id:6, name:"Bolsa premium elegante", category:"Elegante",
+  price:1350, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+    "./Img/6/1.jpeg",
+    "./Img/6/2.jpeg",
+	"./Img/6/3.jpeg",
+	"./Img/5/4.jpeg",
+    "./Img/6/5.jpeg"
+  ]
+ },
+{
+  id:7, name:"Bolsa premium elegante", category:"Elegante",
+  price:1150, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+    "./Img/7/1.jpeg",
+    "./Img/7/2.jpeg",
+	"./Img/7/3.jpeg",
+	"./Img/7/4.jpeg",
+    "./Img/7/5.jpeg",
+	"./Img/7/6.jpeg",
+    "./Img/7/7.jpeg"
+  ]
+ },
+ {
+  id:8, name:"Bolsa premium elegante", category:"Elegante",
+  price:1300, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+    "./Img/8/1.jpeg",
+    "./Img/8/2.jpeg",
+	"./Img/8/3.jpeg",
+	"./Img/8/4.jpeg",
+    "./Img/8/5.jpeg",
+	"./Img/8/6.jpeg"
+  ]
+ },
+ {
+  id:9, name:"Bolsa premium elegante", category:"Elegante",
+  price:1400, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+    "./Img/9/1.jpeg",
+    "./Img/9/2.jpeg",
+	"./Img/9/3.jpeg",
+	"./Img/9/4.jpeg",
+    "./Img/9/5.jpeg",
+	"./Img/9/6.jpeg"
+  ]
+ },
+ {
+  id:10, name:"Bolsa premium elegante", category:"Elegante",
+  price:1350, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+    "./Img/10/1.jpeg",
+    "./Img/10/2.jpeg",
+	"./Img/10/3.jpeg",
+	"./Img/10/4.jpeg",
+    "./Img/10/5.jpeg",
+	"./Img/10/6.jpeg",
+    "./Img/10/7.jpeg"
+  ]
+ },
+ {
+  id:11, name:"Bolsa premium elegante", category:"Elegante",
+  price:1490, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+    "./Img/11/1.jpeg",
+    "./Img/11/2.jpeg",
+	"./Img/11/3.jpeg",
+	"./Img/11/4.jpeg",
+    "./Img/11/5.jpeg"
+  ]
+ },
+ {
+  id:12, name:"Bolsa premium elegante", category:"Elegante",
+  price:1880, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+    "./Img/12/1.jpeg",
+    "./Img/12/2.jpeg",
+	"./Img/12/3.jpeg",
+	"./Img/12/4.jpeg",
+    "./Img/12/5.jpeg",
+	"./Img/12/6.jpeg",
+    "./Img/12/7.jpeg"
+  ]
+ },
+ {
+  id:13, name:"Bolsa premium elegante", category:"Elegante",
+  price:1790, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+    "./Img/13/1.jpeg",
+    "./Img/13/2.jpeg",
+	"./Img/13/3.jpeg",
+	"./Img/13/4.jpeg"
+  ]
+ },
+ {
+  id:14, name:"Bolsa premium elegante", category:"Elegante",
+  price:1650, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+    "./Img/14/1.jpeg",
+    "./Img/14/2.jpeg",
+	"./Img/14/3.jpeg",
+	"./Img/14/4.jpeg",
+    "./Img/14/5.jpeg"
+  ]
+ },
+ {
+  id:15, name:"Bolsa premium elegante", category:"Elegante",
+  price:1890, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+	"./Img/15/1.jpeg",
+    "./Img/15/2.jpeg",
+	"./Img/15/3.jpeg",
+	"./Img/15/4.jpeg",
+    "./Img/15/5.jpeg"
+  ]
+ },
+ {
+  id:16, name:"Bolsa premium elegante", category:"Elegante",
+  price:1740, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+	"./Img/16/1.jpeg",
+    "./Img/16/2.jpeg",
+	"./Img/16/3.jpeg",
+	"./Img/16/4.jpeg",
+    "./Img/16/5.jpeg"
+  ]
+ },
+ {
+  id:17, name:"Bolsa premium elegante", category:"Elegante",
+  price:1350, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+	"./Img/17/1.jpeg",
+	"./Img/17/3.jpeg",
+	"./Img/17/4.jpeg",
+    "./Img/17/5.jpeg"
+  ]
+ },
+ {
+  id:18, name:"Bolsa premium elegante", category:"Elegante",
+  price:1550, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+	"./Img/18/1.jpeg",
+    "./Img/18/2.jpeg",
+	"./Img/18/3.jpeg",
+	"./Img/18/4.jpeg",
+    "./Img/18/5.jpeg"
+  ]
+ },
+ {
+  id:19, name:"Bolsa premium elegante", category:"Elegante",
+  price:1195, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+	"./Img/19/1.jpeg",
+    "./Img/19/2.jpeg",
+	"./Img/19/3.jpeg",
+	"./Img/19/4.jpeg",
+    "./Img/19/5.jpeg"
+  ]
+ },
+ {
+  id:7, name:"Bolsa premium elegante", category:"Elegante",
+  price:1099, oldPrice:0,
+  description:"Bolsa premium con estilo sofisticado. Ideal para quienes buscan elegancia y practicidad.",
+  colors:[{name:"Negro",hex:"#222222"},{name:"Café",hex:"#825638"},{name:"Beige",hex:"#d7c2a5"}],
+  images:[
+    "./Img/7/1.jpeg",
+    "./Img/7/2.jpeg",
+	"./Img/7/3.jpeg",
+	"./Img/7/4.jpeg",
+    "./Img/7/5.jpeg",
+	"./Img/7/6.jpeg",
+    "./Img/7/7.jpeg"
+  ]
+ }
+
+];
+
+let cart = 0;
+let currentCategory = "Todas";
+let currentProduct = null;
+let detailIndex = 0;
+let selectedColor = "";
+
+function renderProducts(items) {
+ const container = document.getElementById("products");
+ container.innerHTML = items.map(product => `
+  <article class="product">
+   <div class="carousel" data-index="0">
+    <div class="carousel-track">
+     ${product.images.map(img => `<img src="${img}" alt="${product.name}" onclick="openModal(${product.id})">`).join("")}
+    </div>
+    <button class="arrow prev" onclick="moveSlide(this,-1)" aria-label="Foto anterior">‹</button>
+    <button class="arrow next" onclick="moveSlide(this,1)" aria-label="Foto siguiente">›</button>
+    <button class="favorite" onclick="toggleFavorite(this)" aria-label="Agregar a favoritos">♡</button>
+    <div class="dots">
+     ${product.images.map((_,i) => `<button class="dot ${i===0?'active':''}" onclick="goToSlide(this,${i})" aria-label="Ver foto ${i+1}"></button>`).join("")}
+    </div>
+   </div>
+   <h3 onclick="openModal(${product.id})">${product.name}</h3>
+   ${product.oldPrice ? '<p class="offer">OFERTA</p>' : ''}
+   <p class="price">
+    ${product.oldPrice ? `<span class="old-price">$${product.oldPrice}</span>` : ''}
+    $${product.price.toLocaleString("es-MX")} MXN
+   </p>
+   <button class="add-cart" onclick="openModal(${product.id})">VER PRODUCTO</button>
+  </article>
+ `).join("");
+ activateSwipe();
+}
+
+function updateCarousel(carousel,index) {
+ const images = carousel.querySelectorAll(".carousel-track img");
+ const dots = carousel.querySelectorAll(".dot");
+ index = (index + images.length) % images.length;
+ carousel.dataset.index = index;
+ carousel.querySelector(".carousel-track").style.transform = `translateX(-${index*100}%)`;
+ dots.forEach((dot,i) => dot.classList.toggle("active",i===index));
+}
+
+function moveSlide(button,direction) {
+ const carousel = button.closest(".carousel");
+ updateCarousel(carousel,Number(carousel.dataset.index)+direction);
+}
+
+function goToSlide(button,index) {
+ updateCarousel(button.closest(".carousel"),index);
+}
+
+function activateSwipe() {
+ document.querySelectorAll(".carousel").forEach(carousel => {
+  let startX = 0;
+  carousel.addEventListener("touchstart",e => {
+   startX = e.touches[0].clientX;
+  },{passive:true});
+  carousel.addEventListener("touchend",e => {
+   const difference = startX-e.changedTouches[0].clientX;
+   if(Math.abs(difference)>40) {
+    updateCarousel(carousel,Number(carousel.dataset.index)+(difference>0?1:-1));
+   }
+  },{passive:true});
+ });
+}
+
+function openModal(id) {
+ currentProduct = catalog.find(p => p.id === id);
+ if(!currentProduct) return;
+ detailIndex = 0;
+ selectedColor = currentProduct.colors[0].name;
+ document.getElementById("detailName").textContent = currentProduct.name;
+ document.getElementById("detailDescription").textContent = currentProduct.description;
+ document.getElementById("detailPrice").textContent = "$"+currentProduct.price.toLocaleString("es-MX")+" MXN";
+ document.getElementById("cartMessage").textContent = "";
+ renderDetailGallery();
+ renderColors();
+ document.getElementById("productModal").classList.add("show");
+ document.body.style.overflow = "hidden";
+}
+
+function renderDetailGallery() {
+ document.getElementById("detailImage").src = currentProduct.images[detailIndex];
+ document.getElementById("thumbnails").innerHTML = currentProduct.images.map((img,i) => `
+  <img src="${img}" class="${i===detailIndex?'selected':''}" onclick="selectDetailImage(${i})" alt="Vista ${i+1}">
+ `).join("");
+}
+
+function selectDetailImage(index) {
+ detailIndex = index;
+ renderDetailGallery();
+}
+
+function changeDetailImage(direction) {
+ detailIndex = (detailIndex+direction+currentProduct.images.length)%currentProduct.images.length;
+ renderDetailGallery();
+}
+
+function renderColors() {
+ document.getElementById("colorOptions").innerHTML = currentProduct.colors.map(color => `
+  <button class="color-option ${color.name===selectedColor?'selected':''}"
+   style="background:${color.hex}" title="${color.name}" aria-label="${color.name}"
+   onclick="selectColor('${color.name}')"></button>
+ `).join("");
+ document.getElementById("selectedColor").textContent = selectedColor;
+}
+
+function selectColor(color) {
+ selectedColor = color;
+ renderColors();
+}
+
+function closeModal() {
+ document.getElementById("productModal").classList.remove("show");
+ document.body.style.overflow = "";
+}
+
+document.getElementById("productModal").addEventListener("click",function(e) {
+ if(e.target === this) closeModal();
+});
+
+document.addEventListener("keydown",e => {
+ if(e.key==="Escape") closeModal();
+});
+
+function addCart() {
+ cart++;
+ document.getElementById("cart").textContent = cart;
+ document.getElementById("cartMessage").textContent = "¡Producto agregado al carrito!";
+}
+
+function buyWhatsApp() {
+ if(!currentProduct) return;
+ if(!/^52\d{10}$/.test(WHATSAPP_NUMBER)) {
+  alert("Configura el número de WhatsApp de tu tienda en el código.");
+  return;
+ }
+ const message =
+  `Hola, estoy interesado en comprar este producto:\n\n`+
+  `Producto: ${currentProduct.name}\n`+
+  `Precio: $${currentProduct.price} MXN\n`+
+  `Color: ${selectedColor}\n`+
+  `¿Me pueden proporcionar información para realizar mi compra?`;
+ const url = "https://wa.me/"+WHATSAPP_NUMBER+"?text="+encodeURIComponent(message);
+ window.open(url,"_blank");
+}
+
+function toggleFavorite(button) {
+ button.classList.toggle("active");
+ button.textContent = button.classList.contains("active") ? "♥" : "♡";
+}
+
+function filterProducts(category) {
+ currentCategory = category;
+ applyFilters();
+}
+
+document.getElementById("search").addEventListener("input",applyFilters);
+
+function applyFilters() {
+ const search = document.getElementById("search").value.toLowerCase();
+ const filtered = catalog.filter(p => {
+  const categoryMatch = currentCategory==="Todas" || p.category===currentCategory;
+  const searchMatch = p.name.toLowerCase().includes(search);
+  return categoryMatch && searchMatch;
+ });
+ renderProducts(filtered);
+}
+
+function sortProducts() {
+ const order = document.getElementById("sort").value;
+ const products = [...catalog];
+ if(order==="low") products.sort((a,b)=>a.price-b.price);
+ if(order==="high") products.sort((a,b)=>b.price-a.price);
+ const search = document.getElementById("search").value.toLowerCase();
+ const filtered = products.filter(p =>
+  (currentCategory==="Todas" || p.category===currentCategory) &&
+  p.name.toLowerCase().includes(search)
+ );
+ renderProducts(filtered);
+}
+
+renderProducts(catalog);
+</script>
+</body>
+</html>
